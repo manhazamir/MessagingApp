@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from rest_framework.authtoken.models import Token
 
-from features.models import User
+from features.models import User, Thread
 
 
 class CustomRegistrationSerializer(serializers.ModelSerializer):
@@ -29,3 +29,8 @@ class CustomRegistrationSerializer(serializers.ModelSerializer):
 
 
 
+class ThreadSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Thread
+        fields = '__all__'
