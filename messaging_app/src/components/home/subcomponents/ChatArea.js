@@ -14,6 +14,7 @@ const useStyles = makeStyles(() => ({
     fontSize: 17,
     paddingLeft: 10,
     background: "none",
+
     color: " #134696",
     "&:focus": {
       outline: "none",
@@ -50,7 +51,7 @@ function ChatArea({ selectedContact }) {
         let data = JSON.parse(e.data);
         console.log("Data: ", data);
 
-        if (data?.type === "chat") {
+        if (data?.type === "chat_message") {
           // setChatMessages((prev) => ({ ...prev, a: data?.message }));
           setSentFrom(data?.sent_from);
           setSentTo(data?.sent_to);
@@ -76,8 +77,8 @@ function ChatArea({ selectedContact }) {
           chatSocketConnection.send(
             JSON.stringify({
               message: message,
-              sent_from: sentFromID,
-              sent_to: sentToID,
+              sent_by: sentFromID,
+              send_to: sentToID,
             })
           );
         } else console.log("User not logged in");
@@ -87,6 +88,7 @@ function ChatArea({ selectedContact }) {
   return (
     <div>
       <Box
+        style={selectedContact ? { background: "#00489E" } : null}
         sx={{
           my: 2,
 
@@ -108,6 +110,7 @@ function ChatArea({ selectedContact }) {
                 height: "calc(100vh - 280px)",
                 border: "1px solid #00498e",
                 borderRadius: 3,
+                background: "white",
               }}
             >
               {/* {chatMessages &&
@@ -126,6 +129,7 @@ function ChatArea({ selectedContact }) {
                 height: "50px",
                 border: "1px solid #00498e",
                 borderRadius: 3,
+                background: "white",
               }}
             >
               <input
@@ -147,7 +151,7 @@ function ChatArea({ selectedContact }) {
           </>
         ) : (
           <div className={classes.iconPosition}>
-            <ChatBubbleIcon sx={{ fontSize: 200, color: "#00489e" }} />
+            <ChatBubbleIcon sx={{ fontSize: 200, color: "#00a0b2" }} />
           </div>
         )}
       </Box>

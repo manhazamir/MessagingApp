@@ -5,9 +5,12 @@ const initialState = {
   contactsResponse: null,
   loading: false,
   error: false,
-};
 
-// const auth = localStorage.getItem("token");
+  // thread
+  threadResponse: null,
+  loading: false,
+  error: false,
+};
 
 export const getContacts = createAsyncThunk(
   "contacts/getUsers",
@@ -20,6 +23,33 @@ export const getContacts = createAsyncThunk(
         //     Authorization: `Token ${auth}`,
         //   },
         // }
+      );
+      return response.data;
+    } catch (error) {
+      const message =
+        (error.response && error.response.data) ||
+        error.message ||
+        error.toString();
+
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
+export const createUsersThread = createAsyncThunk(
+  "contacts/postThread",
+  async (data, thunkAPI) => {
+    try {
+      const auth = localStorage.getItem("token");
+      console.log("auth token", auth);
+      const response = await axios.post(
+        process.env.REACT_APP_SERVER_API + "/thread/",
+        data,
+        {
+          headers: {
+            Authorization: `Token ${auth}`,
+          },
+        }
       );
       return response.data;
     } catch (error) {
@@ -55,6 +85,18 @@ export const contactsSlice = createSlice({
       .addCase(getContacts.rejected, (state, action) => {
         state.loading = false;
         state.contactsResponse = action.payload;
+        state.error = true;
+      })
+      .addCase(createUsersThread.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(createUsersThread.fulfilled, (state, action) => {
+        state.loading = false;
+        state.threadResponse = action.payload;
+      })
+      .addCase(createUsersThread.rejected, (state, action) => {
+        state.loading = false;
+        state.threadResponse = action.payload;
         state.error = true;
       });
   },

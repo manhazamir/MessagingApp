@@ -9,6 +9,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import Divider from "@mui/material/Divider";
 import GroupModal from "../../miscellaneous/GroupModal";
 import BroadcastModal from "../../miscellaneous/BroadcastModal";
+import { createUsersThread } from "../../../redux/slices/contactsSlice";
 
 const useStyles = makeStyles(() => ({
   container: {
@@ -131,6 +132,17 @@ function Contacts({ selectContact }) {
     }
   }, [contacts]);
 
+  const handleClickContact = (contact) => {
+    console.log({ contact });
+    selectContact(contact);
+    const threadData = {
+      user1: parseInt(localStorage.getItem("userID")),
+      user2: contact?.id,
+    };
+    console.log({ threadData });
+    dispatch(createUsersThread(threadData));
+  };
+
   const getFilteredContacts = () => {
     if (!searchContact) return contacts;
     return contacts?.filter(
@@ -214,7 +226,9 @@ function Contacts({ selectContact }) {
           return (
             <div
               className={classes.contactsWrapper}
-              onClick={() => selectContact(contact)}
+              onClick={() => {
+                handleClickContact(contact);
+              }}
             >
               <div
                 style={{
