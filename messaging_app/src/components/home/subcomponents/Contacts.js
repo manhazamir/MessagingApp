@@ -126,8 +126,8 @@ function Contacts({
 
   useEffect(() => {
     if (threadsResponse) {
-      console.log(threadsResponse?.result);
-      setThreadID(threadsResponse?.result?.id);
+      console.log({ threadsResponse });
+      setThreadID(threadsResponse?.id);
     }
   }, [threadsResponse]);
 
@@ -186,6 +186,7 @@ function Contacts({
 
   const getFilteredContacts = () => {
     if (!searchContact) return contacts;
+
     return contacts?.filter(
       (contact) =>
         contact?.fname?.toLowerCase().includes(searchContact.toLowerCase()) ||
@@ -193,7 +194,17 @@ function Contacts({
     );
   };
 
+  const getFilteredGroups = () => {
+    if (!searchContact) return userGroups;
+
+    return userGroups?.filter((contact) =>
+      contact?.group_name?.toLowerCase().includes(searchContact.toLowerCase())
+    );
+  };
+
   const filteredContacts = getFilteredContacts();
+
+  const filteredGroups = getFilteredGroups();
 
   return (
     <Box
@@ -202,13 +213,11 @@ function Contacts({
         mx: 2,
         display: "flex",
         flexDirection: "column",
-        // height: "100vh",
         border: "1px solid #00498e",
         borderRadius: "16px",
         alignItems: "flex-start",
         padding: "16px",
         gap: "4px",
-        // position: "relative",
       }}
     >
       <div className={classes.searchContainer}>
@@ -304,7 +313,7 @@ function Contacts({
           );
         })}
         <hr />
-        {userGroups?.map((group, index) => (
+        {filteredGroups?.map((group, index) => (
           <>
             <div
               className={classes.contactsWrapper}

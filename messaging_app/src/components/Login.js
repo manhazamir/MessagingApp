@@ -13,7 +13,7 @@ import { useNavigate } from "react-router-dom";
 import Typography from "@mui/material/Typography";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import networkingImg from "../assets/networking.jpg";
-import { login } from "../redux/slices/authSlice";
+import { login, reset } from "../redux/slices/authSlice";
 import Loader from "../utils/Loader";
 
 const theme = createTheme();
@@ -45,7 +45,7 @@ export default function Login() {
       localStorage.setItem("token", loginResponse?.result?.token);
       localStorage.setItem("userID", loginResponse?.result?.id);
       localStorage.setItem("username", loginResponse?.result?.username);
-
+      dispatch(reset());
       navigate("/home");
     }
   }, [loginResponse]);

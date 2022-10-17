@@ -43,7 +43,12 @@ class ChatConsumer(AsyncConsumer):
             return False
 
         sent_by_user = await self.get_user_object(sent_by_id)
+        print("sent by user", sent_by_user)
+   
+
         send_to_user = await self.get_user_object(send_to_id)
+        print("sent to user", send_to_user)
+
         thread_obj = await self.get_thread(thread_id)
         if not sent_by_user:
             print('Error:: sent by user is incorrect')
@@ -55,10 +60,11 @@ class ChatConsumer(AsyncConsumer):
         await self.create_chat_message(thread_obj, sent_by_user, msg)
 
         other_user_chat_room = f'user_chatroom_{send_to_id}'
-        self_user = self.scope['user']
+       
         response = {
             'message': msg,
-            'sent_by': self_user.id,
+            'sent_by': sent_by_id,
+            'sent_to': send_to_id,
             'thread_id': thread_id
         }
 
@@ -207,31 +213,3 @@ class GroupConsumer(WebsocketConsumer):
             'message': message,
         }))
         
-    # async def websocket_connect(self, event):
-    #     print('connected', event)
-    #     params = parse_qs(self.scope['query_string'].decode('utf8'))
-    #     logged_user_id = params.get('logged_user', (None,))[0]
-    #     other_user_id = params.get('other_user', (None,))[0]
-
-        
-
-    #     me_obj = User.objects.get(id = logged_user_id)
-    #     other_user_obj = User.objects.get(id = other_user_id)
-
-    #     print("here 1")
-     
-    #     thread_obj = Thread.objects.get_or_create_personal_thread(me_obj, other_user_obj)
-    #     print("here 2")
-    #     self.room_name = f'user_chatroom_{thread_obj.id}'
-
-    #     print("here 3")
-
-    #     await self.channel_layer.group_add(
-    #         self.room_name,
-    #         self.channel_name
-    #     )
-        
-
-    #     await self.send({
-    #         'type': 'websocket.accept'
-    #     })

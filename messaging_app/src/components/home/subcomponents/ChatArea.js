@@ -27,6 +27,21 @@ const useStyles = makeStyles(() => ({
     position: "relative",
     top: "30%",
   },
+  scrollbar: {
+    "&::-webkit-scrollbar": {
+      width: "0.3em",
+    },
+    "&::-webkit-scrollbar-track": {
+      boxShadow: "inset 0 0 6px rgba(0,0,0,0.00)",
+      background: "#f1f1f1",
+      webkitBoxShadow: "inset 0 0 6px rgba(0,0,0,0.00)",
+    },
+    "&::-webkit-scrollbar-thumb": {
+      backgroundColor: "#014493",
+      borderRadius: 20,
+      padding: 5,
+    },
+  },
 }));
 
 function ChatArea({ selectedContact, selectedGroup, broadcastMsg, threadID }) {
@@ -34,9 +49,11 @@ function ChatArea({ selectedContact, selectedGroup, broadcastMsg, threadID }) {
   const dispatch = useDispatch();
   const [message, setMessage] = useState();
   const [newMessage, setNewMessage] = useState();
-  const [chatMessages, setChatMessages] = useState();
+  const [chatMessages, setChatMessages] = useState([]);
   const [sentTo, setSentTo] = useState();
   const [sentFrom, setSentFrom] = useState();
+
+  const [sendChatResponse, setSendChatResponse] = useState();
 
   const [groupUsers, setGroupUsers] = useState();
 
@@ -88,14 +105,11 @@ function ChatArea({ selectedContact, selectedGroup, broadcastMsg, threadID }) {
         let data = JSON.parse(e.data);
         console.log("Data: ", data);
 
-        if (data?.type === "chat_message") {
-          // setChatMessages((prev) => ({ ...prev, a: data?.message }));
-          setSentFrom(data?.sent_from);
-          setSentTo(data?.sent_to);
+        const temp = chatMessages;
+        temp.push(data);
 
-          console.log("dskd", data);
-          setChatMessages(data?.message);
-        }
+        setSendChatResponse(data);
+        setChatMessages([...temp]);
       };
     }
 
@@ -151,6 +165,7 @@ function ChatArea({ selectedContact, selectedGroup, broadcastMsg, threadID }) {
         {selectedContact ? (
           <>
             <Box
+              className={classes.scrollbar}
               sx={{
                 m: 1,
                 display: "flex",
@@ -159,15 +174,97 @@ function ChatArea({ selectedContact, selectedGroup, broadcastMsg, threadID }) {
                 border: "1px solid #00498e",
                 borderRadius: 3,
                 background: "white",
+                overflowY: "auto",
               }}
             >
-              {/* {chatMessages &&
-            chatMessages?.map((message) => <p>{JSON.stringify(message)}</p>)} */}
-              {chatMessages && (
+              {chatMessages &&
+                chatMessages?.map((message) => (
+                  <>
+                    {message?.sent_by === localStorage.getItem("userID") ? (
+                      <>
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "flex-end",
+                          }}
+                        >
+                          <p
+                            style={{
+                              fontSize: 16,
+                              padding: 10,
+                              border: "2px solid #00489e",
+                              borderRadius: 10,
+                              margin: 20,
+                              width: "30%",
+                              maxWidth: "50%",
+                            }}
+                          >
+                            {message?.message}
+                          </p>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div>
+                          <p
+                            style={{
+                              fontSize: 16,
+                              padding: 10,
+                              border: "2px solid #00a0b2",
+                              borderRadius: 10,
+                              margin: 20,
+                              width: "30%",
+                              maxWidth: "50%",
+                            }}
+                          >
+                            {message?.message}
+                          </p>
+                        </div>
+                      </>
+                    )}
+                  </>
+                ))}
+              {/* {chatMessages && (
                 <>
-                  <p>{chatMessages}</p> by <p>{sentFrom}</p> to <>{sentTo}</>
+                  {localStorage.getItem("userID") ===
+                  sendChatResponse?.sent_by ? (
+                    <div
+                      style={{ display: "flex", justifyContent: "flex-end" }}
+                    >
+                      <p
+                        style={{
+                          fontSize: 16,
+                          padding: 10,
+                          border: "2px solid #00489e",
+                          borderRadius: 10,
+                          margin: 20,
+                          width: "30%",
+                          maxWidth: "50%",
+                        }}
+                      >
+                        {chatMessages}
+                      </p>
+                    </div>
+                  ) : (
+                    <div>
+                      <p
+                        style={{
+                          fontSize: 16,
+                          padding: 10,
+                          border: "2px solid #00a0b2",
+                          borderRadius: 10,
+                          margin: 20,
+                          width: "30%",
+                          maxWidth: "50%",
+                        }}
+                      >
+                        {chatMessages}
+                      </p>
+                    </div>
+                  )}
                 </>
-              )}
+              )} */}
+
               {(localStorage.getItem("broadcastID") ===
                 localStorage.getItem("userID") ||
                 parseInt(localStorage.getItem("broadcastID")) ===

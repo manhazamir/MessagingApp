@@ -49,8 +49,7 @@ class Thread(models.Model):
     timestamp = models.DateTimeField(auto_now_add = True)
 
     objects = ThreadManager()
-    class Meta:
-        unique_together = ['user1', 'user2']
+
 
 class ChatMessage(models.Model):
     thread = models.ForeignKey(Thread, on_delete = models.CASCADE, null = True, blank = True, related_name = 'chatmessage_thread')
