@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Modal from "@mui/material/Modal";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -17,8 +17,65 @@ const modalStyle = {
   borderRadius: "10px",
   p: 4,
 };
-function BroadcastModal({ broadcastModalOpen, setBroadcastModalOpen }) {
+function BroadcastModal({
+  broadcastModalOpen,
+  setBroadcastModalOpen,
+  contacts,
+  setBroadcastMsg,
+}) {
   const [message, setMessage] = useState();
+  const [socketConnection, setSocketConnection] = useState();
+
+  useEffect(() => {
+    const url = `ws://127.0.0.1:8000/ws/broadcast-message/`;
+    const chatSocket = new WebSocket(url);
+
+    setSocketConnection(chatSocket);
+
+    chatSocket.onmessage = function (e) {
+      let data = JSON.parse(e.data);
+      console.log("Data: ", data);
+
+      if (data?.type === "broadcast") {
+        console.log({ data });
+        setBroadcastMsg(data?.message);
+        localStorage.setItem("broadcastBy", data?.sent_by_username);
+        localStorage.setItem("broadcastID", data?.sent_by_id);
+      }
+    };
+  }, []);
+
+  const handleSendBroadcastMessage = () => {
+    if (message === null) {
+      console.log("Cannot send an empty message");
+      return;
+    } else {
+      if (socketConnection) {
+        const sent_by = localStorage.getItem("userID");
+        const send_to = [];
+
+        console.log({ contacts });
+        console.log(message);
+
+        for (let index in contacts) {
+          send_to.push(contacts[index]?.id);
+        }
+
+        console.log({ send_to });
+
+        // broadcast msg
+
+        socketConnection.send(
+          JSON.stringify({
+            message: message,
+            sent_by: sent_by,
+            send_to: send_to,
+          })
+        );
+        setBroadcastModalOpen(false);
+      }
+    }
+  };
   return (
     <Modal
       open={broadcastModalOpen}
@@ -51,7 +108,7 @@ function BroadcastModal({ broadcastModalOpen, setBroadcastModalOpen }) {
             id="message"
             label="Message"
             name="message"
-            onChange={({ value }) => setMessage(value)}
+            onChange={(event) => setMessage(event?.target?.value)}
             autoFocus
             autoComplete="family-name"
           />
@@ -63,7 +120,7 @@ function BroadcastModal({ broadcastModalOpen, setBroadcastModalOpen }) {
           >
             <Button
               variant="contained"
-              type="submit"
+              onClick={() => handleSendBroadcastMessage()}
               sx={{ mt: 3, mb: 2 }}
               style={{
                 fontWeight: 500,

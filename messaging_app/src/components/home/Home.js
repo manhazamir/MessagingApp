@@ -7,10 +7,51 @@ import { useNavigate } from "react-router-dom";
 
 import Contacts from "./subcomponents/Contacts";
 import ChatArea from "./subcomponents/ChatArea";
+import axios from "axios";
 
 function Home() {
   const navigate = useNavigate();
+
+  const [threads, setThreads] = useState();
+  const [threadID, setThreadID] = useState();
+
+  const [broadcastMsg, setBroadcastMsg] = useState();
+  useEffect(() => {
+    try {
+      const auth = localStorage.getItem("token");
+      console.log("auth token", auth);
+      const response = axios.get(
+        process.env.REACT_APP_SERVER_API +
+          "/messages/" +
+          localStorage.getItem("userID"),
+
+        {
+          headers: {
+            Authorization: `Token ${auth}`,
+          },
+        }
+      );
+      if (response) {
+        console.log("thread rs", response);
+        setThreads(response.data);
+      }
+      return response.data;
+    } catch (error) {
+      const message =
+        (error.response && error.response.data) ||
+        error.message ||
+        error.toString();
+
+      return message;
+    }
+  }, []);
+
   const [selectedContact, setSelectedContact] = useState();
+  const [selectedGroup, setSelectedGroup] = useState();
+
+  useEffect(() => {
+    console.log({ threads });
+  }, [threads]);
 
   useEffect(() => {
     console.log(selectedContact);
@@ -60,7 +101,12 @@ function Home() {
         }}
       >
         <Grid item xs={3.5} md={3.5}>
-          <Contacts selectContact={setSelectedContact} />
+          <Contacts
+            selectContact={setSelectedContact}
+            selectGroup={setSelectedGroup}
+            setBroadcastMsg={setBroadcastMsg}
+            setThreadID={setThreadID}
+          />
         </Grid>
         <Grid item xs={8} md={8} sx={{ marginTop: 0, paddingLeft: 0 }}>
           <Box
@@ -80,13 +126,20 @@ function Home() {
                 <>
                   {selectedContact?.fname} {selectedContact?.lname}
                 </>
+              ) : selectedGroup ? (
+                <>{selectedGroup?.group_name}</>
               ) : (
                 "Select a user to start conversation"
               )}
             </Typography>
             <p></p>
           </Box>
-          <ChatArea selectedContact={selectedContact} />
+          <ChatArea
+            selectedContact={selectedContact}
+            selectedGroup={selectedGroup}
+            broadcastMsg={broadcastMsg}
+            threadID={threadID}
+          />
         </Grid>
       </Grid>
     </div>

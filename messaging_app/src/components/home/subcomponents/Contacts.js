@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { makeStyles } from "@mui/styles";
 import Box from "@mui/material/Box";
 import { useSelector, useDispatch } from "react-redux";
-import { getContacts } from "../../../redux/slices/contactsSlice";
+import { getContacts, getGroups } from "../../../redux/slices/contactsSlice";
 import { Avatar } from "@mui/material";
 import { getRandomColor } from "../../../utils/Constants";
 import SearchIcon from "@mui/icons-material/Search";
@@ -10,6 +10,7 @@ import Divider from "@mui/material/Divider";
 import GroupModal from "../../miscellaneous/GroupModal";
 import BroadcastModal from "../../miscellaneous/BroadcastModal";
 import { createUsersThread } from "../../../redux/slices/contactsSlice";
+import GroupsIcon from "@mui/icons-material/Groups";
 
 const useStyles = makeStyles(() => ({
   container: {
@@ -96,19 +97,39 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-function Contacts({ selectContact }) {
+function Contacts({
+  selectContact,
+  selectGroup,
+  setBroadcastMsg,
+  setThreadID,
+}) {
   const classes = useStyles();
   const dispatch = useDispatch();
   const [contacts, setContacts] = useState();
+
+  const threadsResponse = useSelector((state) => state.contacts.threadResponse);
 
   const [searchContact, setSearchContact] = useState();
   const [groupModalOpen, setGroupModalOpen] = useState(false);
   const [broadcastModalOpen, setBroadcastModalOpen] = useState(false);
 
+  const [userGroups, setUserGroups] = useState();
+
   const contactsResponse = useSelector(
     (state) => state.contacts.contactsResponse
   );
   const contactsResponseError = useSelector((state) => state.contacts.error);
+
+  const fetchUserGroups = useSelector(
+    (state) => state.contacts.fetchGroupResponse
+  );
+
+  useEffect(() => {
+    if (threadsResponse) {
+      console.log(threadsResponse?.result);
+      setThreadID(threadsResponse?.result?.id);
+    }
+  }, [threadsResponse]);
 
   useEffect(() => {
     if (!contactsResponse || !contactsResponse?.length) {
@@ -132,15 +153,35 @@ function Contacts({ selectContact }) {
     }
   }, [contacts]);
 
+  useEffect(() => {
+    if (!fetchUserGroups || !fetchUserGroups?.length) {
+      dispatch(getGroups());
+    }
+  }, []);
+
+  useEffect(() => {
+    if (fetchUserGroups) {
+      console.log("xc", { fetchUserGroups });
+      setUserGroups(fetchUserGroups);
+    }
+  }, [fetchUserGroups]);
+
   const handleClickContact = (contact) => {
     console.log({ contact });
+    selectGroup(null);
     selectContact(contact);
+
     const threadData = {
       user1: parseInt(localStorage.getItem("userID")),
       user2: contact?.id,
     };
     console.log({ threadData });
     dispatch(createUsersThread(threadData));
+  };
+
+  const handleGroupSelect = (group) => {
+    selectContact(null);
+    selectGroup(group);
   };
 
   const getFilteredContacts = () => {
@@ -193,7 +234,9 @@ function Contacts({ selectContact }) {
         </p>
         <p
           className={classes.links}
-          onClick={() => setBroadcastModalOpen(true)}
+          onClick={() => {
+            setBroadcastModalOpen(true);
+          }}
         >
           Send Broadcast
         </p>
@@ -210,8 +253,10 @@ function Contacts({ selectContact }) {
 
       {broadcastModalOpen && (
         <BroadcastModal
+          contacts={contacts}
           broadcastModalOpen
           setBroadcastModalOpen={setBroadcastModalOpen}
+          setBroadcastMsg={setBroadcastMsg}
         />
       )}
       <div
@@ -258,6 +303,40 @@ function Contacts({ selectContact }) {
             </div>
           );
         })}
+        <hr />
+        {userGroups?.map((group, index) => (
+          <>
+            <div
+              className={classes.contactsWrapper}
+              onClick={() => {
+                handleGroupSelect(group);
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  alignItems: "center",
+                }}
+              >
+                <GroupsIcon
+                  sx={{
+                    width: 40,
+                    height: 40,
+                    bgcolor: index % 2 === 0 ? "#2a3eb1" : "#00a0b2",
+                    fontSize: 100,
+                    color: "white",
+                  }}
+                />
+                <div className={classes.userInfo}>
+                  <div className={classes.userDetail}>
+                    <h4>{group?.group_name}</h4>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        ))}
       </div>
     </Box>
   );

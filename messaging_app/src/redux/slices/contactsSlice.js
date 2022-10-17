@@ -8,23 +8,87 @@ const initialState = {
 
   // thread
   threadResponse: null,
-  loading: false,
-  error: false,
+
+  //group
+
+  fetchGroupResponse: null,
 };
 
 export const getContacts = createAsyncThunk(
   "contacts/getUsers",
   async (thunkAPI) => {
     try {
+      const auth = localStorage.getItem("token");
+
       const response = await axios.get(
-        process.env.REACT_APP_SERVER_API + "/get-contacts/"
-        // {
-        //   headers: {
-        //     Authorization: `Token ${auth}`,
-        //   },
-        // }
+        process.env.REACT_APP_SERVER_API + "/get-contacts/",
+        {
+          headers: {
+            Authorization: `Token ${auth}`,
+          },
+        }
       );
       return response.data;
+    } catch (error) {
+      const message =
+        (error.response && error.response.data) ||
+        error.message ||
+        error.toString();
+
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
+export const createNewGroup = createAsyncThunk(
+  "contacts/createGroup",
+  async (groupData, thunkAPI) => {
+    try {
+      const auth = localStorage.getItem("token");
+      const response = await axios.post(
+        process.env.REACT_APP_SERVER_API + "/new-group/",
+        groupData,
+        {
+          headers: {
+            Authorization: `Token ${auth}`,
+          },
+        }
+      );
+      if (response) {
+        console.log("group response", response?.data);
+        return response.data;
+      }
+    } catch (error) {
+      const message =
+        (error.response && error.response.data) ||
+        error.message ||
+        error.toString();
+
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
+export const getGroups = createAsyncThunk(
+  "contacts/getGroups",
+  async (thunkAPI) => {
+    try {
+      const auth = localStorage.getItem("token");
+      const response = await axios.get(
+        process.env.REACT_APP_SERVER_API +
+          "/get-groups/" +
+          localStorage.getItem("userID"),
+
+        {
+          headers: {
+            Authorization: `Token ${auth}`,
+          },
+        }
+      );
+      if (response) {
+        console.log("fetch group response", response?.data);
+        return response.data;
+      }
     } catch (error) {
       const message =
         (error.response && error.response.data) ||
@@ -57,7 +121,6 @@ export const createUsersThread = createAsyncThunk(
         (error.response && error.response.data) ||
         error.message ||
         error.toString();
-
       return thunkAPI.rejectWithValue(message);
     }
   }
@@ -87,6 +150,35 @@ export const contactsSlice = createSlice({
         state.contactsResponse = action.payload;
         state.error = true;
       })
+      .addCase(createNewGroup.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(createNewGroup.fulfilled, (state, action) => {
+        state.loading = false;
+        state.fetchGroupResponse = [
+          ...state.fetchGroupResponse,
+          action.payload,
+        ];
+      })
+      .addCase(createNewGroup.rejected, (state, action) => {
+        state.loading = false;
+
+        state.error = true;
+      })
+
+      .addCase(getGroups.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(getGroups.fulfilled, (state, action) => {
+        state.loading = false;
+        state.fetchGroupResponse = action.payload;
+      })
+      .addCase(getGroups.rejected, (state, action) => {
+        state.loading = false;
+        state.fetchGroupResponse = action.payload;
+        state.error = true;
+      })
+
       .addCase(createUsersThread.pending, (state) => {
         state.loading = true;
       })

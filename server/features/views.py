@@ -1,11 +1,17 @@
+from concurrent.futures import thread
 from rest_framework import generics, status
 from rest_framework.response import Response
 from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import IsAuthenticated
 from django.db.models import Q
-from .models import Thread
-from django.core.exceptions import ValidationError
+
+from features.serializers import NewGroupSerializer
+from .models import Thread, NewGroup
+from rest_framework.decorators import api_view, renderer_classes
+from rest_framework.renderers import JSONRenderer, TemplateHTMLRenderer
+from django.core.serializers import serialize
+from django.http import JsonResponse
 
 
 from features.serializers import CustomRegistrationSerializer, ThreadSerializer
@@ -61,12 +67,45 @@ class CustomLogin(generics.GenericAPIView):
         } })
         
 
+class NewGroupView(generics.GenericAPIView):
+    serializer_class = NewGroupSerializer
+    # permission_classes = (IsAuthenticated,)
+
+
+    def post(self, request, *args, **kwargs): 
+        print("Dayta", request.data)
+        serializer = self.get_serializer(data = request.data)
+        
+        if serializer.is_valid():
+            
+            serializer.save()
+            print("Serailizer data post", serializer.data)
+            return Response(serializer.data,  status= status.HTTP_200_OK)
+        else:
+            print("Error", serializer.errors)
+            return Response(serializer.errors, status= status.HTTP_400_BAD_REQUEST)
+
+
+    def get(self, request, *args, **kwargs):
+    
+
+        user_id = self.kwargs.get('userfk', None)
+        print('user id', user_id)
+
+        groups = NewGroup.objects.filter(user_fk = user_id)
+        serializer = NewGroupSerializer(groups, many = True)
+
+        return Response(serializer.data)
+
+
 class ThreadView(generics.GenericAPIView):
 
     serializer_class = ThreadSerializer
     permission_classes = (IsAuthenticated,)
     
     def post(self, request, *args, **kwargs): 
+
+
         print("Dayta", request.data)
         serializer = self.get_serializer(data = request.data)
 
@@ -86,10 +125,12 @@ class ThreadView(generics.GenericAPIView):
 
         qs = Thread.objects.filter(lookup)
         print("Qs", qs)
-        if qs.exists():
-            return Response({'message': f'Thread between {user1} and {user2} already exists.'}, status= status.HTTP_400_BAD_REQUEST)
-            
+        print("Qs first", qs.first())
 
+        
+        if qs.exists():
+            threads_json = serialize("json", qs)
+            JsonResponse({'result': {'Threads': threads_json}},  status= status.HTTP_200_OK)
         
         if serializer.is_valid():
             
@@ -100,3 +141,15 @@ class ThreadView(generics.GenericAPIView):
             print("Error", serializer.errors)
             return Response(serializer.errors, status= status.HTTP_400_BAD_REQUEST)
         
+
+@api_view(('GET',))
+@renderer_classes((TemplateHTMLRenderer, JSONRenderer))
+def messages_view(request, userid):
+    user = User.objects.get(id = userid)
+    threads = Thread.objects.by_user(user = user).prefetch_related('chatmessage_thread').order_by('timestamp')
+
+    threads_json = serialize("json", threads)
+
+    print("Threads in view", threads_json)
+
+    return JsonResponse({'result': {'Threads': threads_json}},  status= status.HTTP_200_OK)

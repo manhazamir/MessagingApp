@@ -1,7 +1,8 @@
+from re import search
 from rest_framework import serializers
 from rest_framework.authtoken.models import Token
 
-from features.models import User, Thread
+from features.models import User, Thread, NewGroup
 
 
 class CustomRegistrationSerializer(serializers.ModelSerializer):
@@ -27,6 +28,16 @@ class CustomRegistrationSerializer(serializers.ModelSerializer):
         user_obj.token = token.key
         return user_obj
 
+# class GroupUsersSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = User
+#         fields = ['id', 'fname', 'lname', 'username']
+
+class NewGroupSerializer(serializers.ModelSerializer):
+    users = serializers.SlugRelatedField(many=True, slug_field="id", queryset=User.objects.all())
+    class Meta:
+        model = NewGroup
+        fields = ['id', 'group_name', 'users', 'user_fk']
 
 
 class ThreadSerializer(serializers.ModelSerializer):

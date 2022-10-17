@@ -4,7 +4,9 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import TextField from "@mui/material/TextField";
+import { useSelector, useDispatch } from "react-redux";
 import { makeStyles } from "@mui/styles";
+import { createNewGroup } from "../../redux/slices/contactsSlice";
 
 const modalStyle = {
   position: "absolute",
@@ -38,12 +40,27 @@ const useStyles = makeStyles(() => ({
 
 function GroupModal({ groupModalOpen, setGroupModalOpen, contacts }) {
   const classes = useStyles();
+  const dispatch = useDispatch();
   const [groupName, setGroupName] = useState();
   const [checkedCheckboxes, setCheckedCheckboxes] = useState([]);
+  const [usersID, setUsersID] = useState([]);
 
   useEffect(() => {
     console.log({ contacts });
   }, []);
+
+  const handleCreateGroup = () => {
+    const groupData = {
+      user_fk: localStorage.getItem("userID"),
+      group_name: groupName,
+      users: usersID,
+    };
+
+    console.log({ groupData });
+
+    dispatch(createNewGroup(groupData));
+    setGroupModalOpen(false);
+  };
 
   const handleCheckboxChange = (data) => {
     const isChecked = checkedCheckboxes.some(
@@ -57,6 +74,7 @@ function GroupModal({ groupModalOpen, setGroupModalOpen, contacts }) {
       );
     } else {
       setCheckedCheckboxes(checkedCheckboxes.concat(data));
+      setUsersID(usersID.concat(data?.id));
     }
   };
   return (
@@ -89,7 +107,7 @@ function GroupModal({ groupModalOpen, setGroupModalOpen, contacts }) {
             id="groupName"
             label="Group Name"
             name="groupName"
-            onChange={({ value }) => setGroupName(value)}
+            onChange={(event) => setGroupName(event?.target?.value)}
             autoFocus
             autoComplete="family-name"
           />
@@ -130,7 +148,7 @@ function GroupModal({ groupModalOpen, setGroupModalOpen, contacts }) {
           >
             <Button
               variant="contained"
-              type="submit"
+              onClick={handleCreateGroup}
               sx={{ mt: 3, mb: 2 }}
               style={{
                 fontWeight: 500,
